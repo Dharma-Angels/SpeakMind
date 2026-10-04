@@ -4,32 +4,32 @@ import { getFirestore, connectFirestoreEmulator, enableIndexedDbPersistence } fr
 import Logger from '../utils/Logger'
 
 // Your web app's Firebase configuration
+const rawApiKey = import.meta.env.VITE_FIREBASE_API_KEY
+export const isFirebaseConfigured = Boolean(
+  rawApiKey &&
+  rawApiKey !== 'your-api-key' &&
+  !rawApiKey.includes('your-') &&
+  String(rawApiKey).trim() !== ''
+)
+
+// Fallback demo config to prevent crashes when .env is not yet configured
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+  apiKey: isFirebaseConfigured ? rawApiKey : 'AIzaSySpeakMindDemoDummyKey00000000000',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'speakmind-demo.firebaseapp.com',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'speakmind-demo',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'speakmind-demo.appspot.com',
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '123456789012',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:123456789012:web:demo123456',
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || 'G-DEMO1234'
 }
 
 // Basic runtime validation for clearer local setup errors (development only)
 if (import.meta.env.DEV) {
-  const missing: string[] = []
-  const entries = Object.entries(firebaseConfig) as Array<[string, string | undefined]>
-  for (const [key, value] of entries) {
-    if (value === undefined || value === null || String(value).trim() === '') {
-      missing.push(key)
-    }
-  }
-  if (missing.length) {
+  if (!isFirebaseConfigured) {
     // eslint-disable-next-line no-console
-    console.warn('[Firebase] Missing env values:', missing.join(', '))
-  }
-  if (firebaseConfig.apiKey && !String(firebaseConfig.apiKey).startsWith('AIza')) {
-    // eslint-disable-next-line no-console
-    console.warn('[Firebase] apiKey looks invalid (does not start with AIza). Check VITE_FIREBASE_API_KEY')
+    console.warn(
+      '[Firebase] Running in Demo/Fallback mode. Firebase credentials not configured in .env. To enable live Firebase Auth & Firestore sync, configure VITE_FIREBASE_* in .env'
+    )
   }
 }
 
@@ -42,9 +42,8 @@ export const auth = getAuth(app)
 // Initialize Cloud Firestore and get a reference to the service
 export const db = getFirestore(app)
 
-// Enable offline persistence for better UX
-// This allows the app to work offline and sync when back online
-if (typeof window !== 'undefined') {
+// Enable offline persistence for better UX (only if configured)
+if (typeof window !== 'undefined' && isFirebaseConfigured) {
   enableIndexedDbPersistence(db).catch((err) => {
     if (err.code === 'failed-precondition') {
       // Multiple tabs open, persistence can only be enabled in one tab at a time

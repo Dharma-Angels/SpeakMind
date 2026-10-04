@@ -35,7 +35,14 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onAuth }) => {
   const failedAttemptsRef = useRef(0)
   const lastAttemptTimeRef = useRef(0)
 
-  const { login, signup, loginWithGoogle } = useAuth()
+  const { login, signup, loginWithGoogle, loginAsGuest, isConfigured } = useAuth()
+
+  const handleGuestLogin = () => {
+    const guestUser = loginAsGuest()
+    const onboardingKey = `speakmind_user_onboarding_${guestUser.uid}`
+    const hasCompletedOnboarding = localStorage.getItem(onboardingKey)
+    onAuth(!hasCompletedOnboarding, guestUser)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -184,6 +191,17 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onAuth }) => {
 
           <div className="relative z-10">
 
+            {!isConfigured && (
+              <div className="bg-amber-500/20 border border-amber-400/40 rounded-xl p-3 mb-4 backdrop-blur-md text-center">
+                <p className="text-amber-100 text-xs font-semibold">
+                  Running in Local Demo Mode
+                </p>
+                <p className="text-white/75 text-[11px] mt-0.5">
+                  Firebase credentials not set in .env. Click <strong>Explore as Guest</strong> below to test all features.
+                </p>
+              </div>
+            )}
+
             {error && (
               <div className="bg-red-500/20 border border-red-400/50 rounded-xl p-3 mb-4 backdrop-blur-md">
                 <p className="text-red-100 text-sm">{error}</p>
@@ -262,7 +280,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onAuth }) => {
             <button
               onClick={handleGoogleLogin}
               disabled={loading}
-              className="w-full bg-white/85 backdrop-blur-lg text-gray-800 py-2.5 md:py-3 rounded-lg md:rounded-xl text-sm md:text-base font-semibold hover:bg-white/95 transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2 md:gap-3 shadow-lg border border-white/40 relative overflow-hidden group"
+              className="w-full bg-white/85 backdrop-blur-lg text-gray-800 py-2.5 md:py-3 rounded-lg md:rounded-xl text-sm md:text-base font-semibold hover:bg-white/95 transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2 md:gap-3 shadow-lg border border-white/40 relative overflow-hidden group mb-2.5"
               aria-label="Sign in with Google"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent transform -skew-x-12 group-hover:translate-x-full transition-transform duration-700"></div>
@@ -273,6 +291,17 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onAuth }) => {
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
               </svg>
               <span className="relative z-10">Google</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleGuestLogin}
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-purple-600/75 to-indigo-600/75 hover:from-purple-600/90 hover:to-indigo-600/90 text-white py-2.5 md:py-3 rounded-lg md:rounded-xl text-sm md:text-base font-semibold transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg border border-white/20 relative overflow-hidden group backdrop-blur-md"
+              aria-label="Explore as Guest"
+            >
+              <span>Explore as Guest</span>
+              <span className="text-[10px] uppercase font-bold tracking-wider bg-white/20 px-2 py-0.5 rounded-full">Demo</span>
             </button>
 
             <div className="text-center mt-4 md:mt-6">
