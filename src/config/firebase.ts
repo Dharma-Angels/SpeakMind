@@ -62,4 +62,18 @@ if (import.meta.env.DEV && import.meta.env.VITE_USE_FIREBASE_EMULATOR === 'true'
   Logger.info('[Firebase] Connected to emulators')
 }
 
+import { getAnalytics, isSupported } from 'firebase/analytics'
+
+// Safe Analytics initialization
+export let analytics: any = null
+if (typeof window !== 'undefined' && isFirebaseConfigured) {
+  isSupported()
+    .then((supported) => {
+      if (supported) {
+        analytics = getAnalytics(app)
+      }
+    })
+    .catch(() => {})
+}
+
 export default app
